@@ -123,4 +123,8 @@ class Promise {
 
 };
 
+Promise.prototype.finally = function(callback) {
+
+}
+
 module.exports = Promise;
