@@ -68,3 +68,109 @@ function A() {
 
 let a = new(A) //=>   new A();
 ```
+
+### 数组的flatten方法
+```js
+let arr2 = [1, 2, [3, 4, [5, 6, 7, [8, 8, 10, [11, 22, 34]]]]];
+Array.prototype.flatten = function (num) {
+  if (num < 1) {
+    return this
+  }
+  let arys = [];
+  return this.reduce((pev, curent) => {
+  Array.isArray(curent) ?  arys.push(...curent.flatten(num - 1)) :  arys.push(curent)
+  return arys
+  }, 0)
+}
+console.log(arr2.flatten(3))
+```
+
+### Promise.finnaly实现
+
+```js
+Promise.prototype.finally = function (callback) {
+  return this.then((data) => {
+    return new Promise((resolve, reject) => {
+      resolve(callback())
+    }).then(() => data)
+  }, (err) => {
+    return new Promise((resolve, reject) => {
+      resolve(callback())
+    }).then(() => {
+      throw err
+    })
+  })
+}
+let p = new Promise((resolve, reject) => {
+  resolve('ddd')
+})
+
+p.finally(()=>{
+  return new Promise((resolve,reject)=>{
+      setTimeout(() => {
+          console.log('finally')
+          resolve(55555);
+      }, 3000);
+  });
+}).then(data=>{
+  console.log('data',data)
+},err=>{
+  console.log('err',err);
+})
+```
+
+### 简易的commonjs规范
+
+```js
+let path = require('path');
+let fs = require('fs');
+let vm = require('vm');
+
+let wrapper = [
+  '(function(exports, module, require, __dirname, __filename){'
+   ,
+  '})'
+]
+
+class Module {
+  constructor(id) {
+    this.id = id; // 文件的绝对路径
+    this.exports = {}
+  }
+  load() {
+    // 获取文件的后缀
+    let ext = path.extname(this.id);
+    // 根据不同的后缀名加载想应的方法
+    Module[ext](this);
+  }
+ 
+
+  static '.js'(module) {
+    let script = fs.readFileSync(module.id, 'utf-8');
+    // 读取的到内容包装成一个函数
+    let funcStr = `${wrapper[0]}${script}${wrapper[1]}`;
+    console.log(funcStr)
+    // 动态执行字符串代码
+    let fn = vm.runInThisContext(funcStr);
+    fn.call(module.exports, module.exports, module, myRequire);
+  }
+
+  static '.json'(module) {
+    let script = fs.readFileSync(module.id, 'utf-8');
+    module.exports = JSON.parse(script);
+  }
+}
+
+function myRequire(mypath) {
+  // 当前路径 mypath 变成一个绝对路径
+  let absPath = path.resolve(__dirname, mypath);
+  let moulde = new Module(absPath);
+  // 加载模块
+   moulde.load();
+
+  return moulde.exports
+}
+let a = myRequire('./b.json')
+console.log(a)
+```
+### minx 类的mixin

@@ -123,8 +123,18 @@ class Promise {
 
 };
 
-Promise.prototype.finally = function(callback) {
-
+Promise.prototype.finally = function (callback) {
+  return this.then((data) => {
+    return new Promise((resolve, reject) => {
+      resolve(callback())
+    }).then(() => data)
+  }, (err) => {
+    return new Promise((resolve, reject) => {
+      resolve(callback())
+    }).then(() => {
+      throw err
+    })
+  })
 }
 
 module.exports = Promise;
