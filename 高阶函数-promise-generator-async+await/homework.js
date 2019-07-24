@@ -206,16 +206,6 @@ let wrapper = [
   '})'
 ]
 
-// Module._extensions['.js'] = function(module){
-//   let script = fs.readFileSync(module.id, 'utf-8');
-//   // 读取的到内容包装成一个函数
-//   let funcStr = `${wrapper[0]}${script}${wrapper[1]}`;
-//   // 动态执行字符串代码
-//   let fn = vm.runInThisContext(funcStr);
-//   fn.call(module.exports, module.exports, module, myRequire);
-
-// }
-
 class Module {
   constructor(id) {
     this.id = id; // 文件的绝对路径
@@ -225,7 +215,7 @@ class Module {
     // 获取文件的后缀
     let ext = path.extname(this.id);
     // 根据不同的后缀名加载想应的方法
-    Module.ext(moulde);
+    Module[ext](this);
   }
  
 
@@ -238,6 +228,11 @@ class Module {
     let fn = vm.runInThisContext(funcStr);
     fn.call(module.exports, module.exports, module, myRequire);
   }
+
+  static '.json'(module) {
+    let script = fs.readFileSync(module.id, 'utf-8');
+    module.exports = JSON.parse(script);
+  }
 }
 
 function myRequire(mypath) {
@@ -249,5 +244,7 @@ function myRequire(mypath) {
 
   return moulde.exports
 }
-let a = myRequire('./a.js')
+let a = myRequire('./b.json')
 console.log(a)
+
+// minx 类的mixin
