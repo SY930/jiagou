@@ -163,22 +163,24 @@ console.log(arr2.flatten(3))
 
 
 // Promise.finnaly实现
-
+let Promise = require('./myPromise');
 Promise.prototype.finally = function (callback) {
   return this.then((data) => {
+    // console.log('成功', data);
     return new Promise((resolve, reject) => {
       resolve(callback())
-    }).then(() => data)
+    }).then((data) => {console.log('aaaaa', data); return data})
   }, (err) => {
     return new Promise((resolve, reject) => {
       resolve(callback())
     }).then(() => {
+      console.log('失败',err)
       throw err
     })
   })
 }
 let p = new Promise((resolve, reject) => {
-  resolve('ddd')
+  reject(100)
 })
 
 p.finally(() => {
@@ -205,7 +207,6 @@ let wrapper = [
    ,
   '})'
 ]
-
 class Module {
   constructor(id) {
     this.id = id; // 文件的绝对路径
@@ -214,6 +215,7 @@ class Module {
   load() {
     // 获取文件的后缀
     let ext = path.extname(this.id);
+    console.log(ext)
     // 根据不同的后缀名加载想应的方法
     Module[ext](this);
   }
@@ -227,6 +229,7 @@ class Module {
     // 动态执行字符串代码
     let fn = vm.runInThisContext(funcStr);
     fn.call(module.exports, module.exports, module, myRequire);
+  console.log('module.exports', module.exports)
   }
 
   static '.json'(module) {
@@ -244,7 +247,7 @@ function myRequire(mypath) {
 
   return moulde.exports
 }
-let a = myRequire('./b.json')
-console.log(a)
+let a = myRequire('./a.js')
+console.log('a',a)
 
 // minx 类的mixin

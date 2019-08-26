@@ -1,11 +1,11 @@
-function resolvePromise(Promise, x, resolve, reject) {
+function resolvePromise(Promise2, x, resolve, reject) {
   // console.log('aaa',x);
-  if (Promise === x) {
+  if (Promise2 === x) {
     // console.log('-------')
     return reject(new Error('return的结果不能与自己相等'));
   }
   let called; // 使用它目的是为了：如果引入别人的 promise失败了就不能再调成功，成功了就不能再调失败
-  if (typeof x === 'function' || (typeof x === 'object' && typeof x !== null)) {
+  if (typeof x === 'function' || (typeof x === 'object' && x !== null)) {
 
     try { // then里面 throw 一个错误信息
       let then = x.then;
@@ -14,7 +14,7 @@ function resolvePromise(Promise, x, resolve, reject) {
           if (called) return;
           called = true;
           console.log('y===', y)
-          resolvePromise(Promise, y, resolve, reject);
+          resolvePromise(Promise2, y, resolve, reject);
         }, r => {
           if (called) return;
           called = true;
@@ -56,6 +56,7 @@ class Promise {
       if (this.status === PENDING) {
         this.value = value;
         this.status = SUCCESS;
+        // console.log(this.onfufilledCallbacks);
         this.onfufilledCallbacks.forEach((fn) => fn());
       }
 
@@ -68,9 +69,17 @@ class Promise {
       }
 
     }
-    executor(resolve, reject);
+    try {
+      executor(resolve, reject);
+    } catch (e) {
+      reject(e);
+    }
   };
   then(onfufilled, onreject) {
+    onfufilled = typeof onfufilled === 'function' ? onfufilled : val => val; // then值的穿透
+    onreject = typeof onreject === 'function' ? onreject : err => {
+      throw err
+    }
     let Promise2;
     Promise2 = new Promise((resolve, reject) => {
       if (this.status === SUCCESS) {
@@ -82,7 +91,6 @@ class Promise {
             reject(e);
           }
         })
-
       }
       if (this.status === FAIL) {
         setTimeout(() => {
@@ -110,6 +118,7 @@ class Promise {
           setTimeout(() => {
             try {
               let x = onreject(this.reason);
+              console.log('rejectfucn', this.reason);
               resolvePromise(Promise2, x, resolve, reject);
             } catch (e) {
               reject(e)
@@ -123,18 +132,18 @@ class Promise {
 
 };
 
-Promise.prototype.finally = function (callback) {
-  return this.then((data) => {
-    return new Promise((resolve, reject) => {
-      resolve(callback())
-    }).then(() => data)
-  }, (err) => {
-    return new Promise((resolve, reject) => {
-      resolve(callback())
-    }).then(() => {
-      throw err
-    })
-  })
-}
+// Promise.prototype.finally = function (callback) {
+//   return this.then((data) => {
+//     return new Promise((resolve, reject) => {
+//       resolve(callback())
+//     }).then(() => data)
+//   }, (err) => {
+//     return new Promise((resolve, reject) => {
+//       resolve(callback())
+//     }).then(() => {
+//       throw err
+//     })
+//   })
+// }
 
 module.exports = Promise;
